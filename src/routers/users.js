@@ -26,13 +26,13 @@ router.post("/User-Collection", async (req, res) => {
 		const pet = new Pet({ petName, petType });
 		const savedPet = await pet.save();
 
-		// Create a new User with the reference to the Pet
+		// สร้าง temp ข้อมูลเพื่อใช้ save ข้อมูลง collection
 		const user = new User({
 			UserName,
 			firstName,
 			lastName,
 			age,
-			pets: [savedPet._id], // Reference to the savedPet ObjectId
+			pets: [savedPet._id], // นำข้อมูลที่เป็น temp ก่อนหน้ามาเราแต่ id
 		});
 
 		console.log(pet);
@@ -55,7 +55,7 @@ router.delete("/Del-user/:UserName", async (req, res) => {
 		});
 
 		if (!_userName) {
-			return res.status(404).send();
+			return res.status(404).send("Not Found User name!");
 		}
 
 		res.send(_userName);
@@ -87,6 +87,7 @@ router.get("/findUser/:UserName", async (req, res) => {
 router.patch("/Update-user/:UserName", async (req, res) => {
 	const updates = Object.keys(req.body);
 
+	// สร้าง Array ที่เก็บชื่อ Attribute ของ User Collection
 	const allowUpdate = ["firstName", "lastName", "age", "petName"];
 
 	//เช็คว่า input ที่เข้ามามี attribute เหมือนกับใน Database ไหม
@@ -98,6 +99,7 @@ router.patch("/Update-user/:UserName", async (req, res) => {
 		return res.status(400).send({ error: "Invalid operation" });
 	}
 
+	// นำ User name ที่ได้ไปหาใน collection ถ้ามีจะ Update
 	try {
 		const user = await User.findOneAndUpdate(
 			{ UserName: req.params.UserName },
@@ -112,8 +114,10 @@ router.patch("/Update-user/:UserName", async (req, res) => {
 			return res.status(404).send("Invalid User Name");
 		}
 
+		// สร้าง tempPetName เพื่อเก็บข้อมูลของ User ที่มี pets เป็น id
 		const tempPetName = user.pets[0];
 
+		// นำข้อมูล tempPetName ไปเช็คใน Pet Collection ถ้ามีจะ Update
 		const findPetName = await Pet.findOneAndUpdate(
 			{
 				_id: tempPetName,
